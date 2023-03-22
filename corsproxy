@@ -53,8 +53,8 @@ app = Bottle()
 
 mytarget = None
 
-METHODS = ['GET', 'POST', 'OPTIONS']
-POST_HEADERS = {
+METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
+ACCESS_CONTROL_HEADERS = {
     'Access-Control-Allow-Methods': ', '.join(METHODS),
     'Access-Control-Allow-Headers': 'Content-Type, '
     'Access-Control-Allow-Headers, Authorization, X-Requested-With',
@@ -73,12 +73,21 @@ def get(path):
     if request.method == 'GET':
         r = requests.get(url, headers=header)
     else:
-        response.headers.update(POST_HEADERS)
+        response.headers.update(ACCESS_CONTROL_HEADERS)
 
         if request.method == 'OPTIONS':
             return
 
-        r = requests.post(url, data=request.body.read(), headers=header)
+        if request.method == 'POST':
+            r = requests.post(url, data=request.body.read(), headers=header)
+        elif request.method == 'PUT':
+            r = requests.put(url, data=request.body.read(), headers=header)
+        elif request.method == 'PATCH':
+            r = requests.patch(url, data=request.body.read(), headers=header)
+        elif request.method == 'DELETE':
+            r = requests.delete(url, data=request.body.read(), headers=header)
+        else:
+            raise Exception(f"Unknown method {request.method}")
 
     response.status = r.status_code
     response.headers.update(r.headers)
